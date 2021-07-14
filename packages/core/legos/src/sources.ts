@@ -73,6 +73,7 @@ import * as reduce from '@chainlink/reduce-adapter'
 import * as renvm_adapter_address from '@chainlink/renvm-address-set-adapter'
 import * as satoshitango from '@chainlink/satoshitango-adapter'
 import * as sochain from '@chainlink/sochain-adapter'
+import * as spectral_macro_score from '@chainlink/spectral-macro-score-adapter'
 import * as sportsdataio from '@chainlink/sportsdataio-adapter'
 import * as stasis from '@chainlink/stasis-adapter'
 import * as taapi from '@chainlink/taapi-adapter'
@@ -162,6 +163,7 @@ export default {
   renvm_adapter_address,
   satoshitango,
   sochain,
+  spectral_macro_score,
   sportsdataio,
   stasis,
   taapi,

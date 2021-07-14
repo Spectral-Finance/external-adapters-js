@@ -105,6 +105,7 @@
     "@chainlink/renvm-address-set-adapter": "*",
     "@chainlink/satoshitango-adapter": "*",
     "@chainlink/sochain-adapter": "*",
+    "@chainlink/spectral-macro-score-adapter": "*",
     "@chainlink/sportsdataio-adapter": "*",
     "@chainlink/stasis-adapter": "*",
     "@chainlink/taapi-adapter": "*",
