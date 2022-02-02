@@ -1,8 +1,7 @@
 import { Requester, AdapterError } from '@chainlink/ea-bootstrap'
 import { InputParameters, RequestConfig } from '@chainlink/types'
 import { BigNumber } from 'ethers'
-import { getTickSet } from '../abi/NFC'
-import { getNFCAddress } from '../abi/NFCRegistry'
+import { getPublicBundle } from '../abi/NFC'
 import { SpectralAdapterConfig } from '../config'
 
 //const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
@@ -32,8 +31,7 @@ const customErrorResolve = (data: IResolveResult) => {
 export interface IRequestInput {
   id: string
   data: {
-    tokenIdHash: string // bytes32Hash
-    tickSetId: string // numeric
+    address: string
     jobRunID: string
   }
 }
@@ -73,47 +71,20 @@ export const computeTickWithScore = (score: number, tickSet: BigNumber[]): numbe
 }
 
 export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
-  const addressOptions: RequestConfig = {
-    baseURL: `${config.BASE_URL_FAST_API}`,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    timeout: config.timeout,
-    url: '/availAddressesEA/',
-    method: 'POST',
-    data: {
-      key: `${config.FAST_API_KEY}`,
-      tokenId: `${request.data.tokenIdHash}`,
-    },
-  }
+  const RPCProvider = `${config.INFURA_URL}${config.INFURA_API_KEY}`
 
-  const addressResponse = await Requester.request<AddressesResponse>(addressOptions, customError)
-  const unsignedAddresses = addressResponse.data.unsigned_addresses
-  const addresses = addressResponse.data.signed_addresses
-  const primaryAddress = addressResponse.data.primary_address
-
-  if (!primaryAddress) {
-    throw new AdapterError({
-      message: 'FastAPI Error: Primary address does not exist on FAST API',
-      cause: 'Primary address does not exist on FAST API',
-    })
-  }
-
-  if (unsignedAddresses.length > 0) {
-    throw new AdapterError({
-      message: 'FastAPI Error: The bundle contains unsigned addresses',
-      cause: 'The bundle contains unsigned addresses',
-    })
-  }
-
-  const primaryUnsigned = unsignedAddresses.find(
-    (address: String) => address.toLowerCase() === primaryAddress.toLowerCase(),
+  const bundle: string[] = await getPublicBundle(
+    config.NFC_ADDRESS,
+    request.data.address,
+    RPCProvider,
   )
 
-  if (primaryUnsigned) {
+  console.log({ bundle })
+
+  if (!(bundle.length > 0)) {
     throw new AdapterError({
-      message: 'FastAPI Error: Primary is unsigned',
-      cause: 'Primary is unsigned',
+      message: 'No bundle found',
+      cause: 'Error when fetching the bundle from the public NFC',
     })
   }
 
@@ -124,34 +95,20 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       Authorization: `Token ${config.MACRO_API_KEY}`,
     },
     timeout: config.timeout,
-    url: '/submit/',
+    url: '/calculate/',
     method: 'POST',
     data: {
-      username: primaryAddress,
-      addresses,
+      addresses: bundle,
     },
   }
+  const resolveJobId = await Requester.request<CalculationResponse>(calculateOptions, customError)
+  const jobId = Requester.getResult(resolveJobId.data as { [key: string]: any }, ['job'])
 
-  const RPCProvider = `${config.INFURA_URL}${config.INFURA_API_KEY}`
-  const nfcAddress = await getNFCAddress(config.NFC_REGISTRY_ADDRESS, RPCProvider)
-  const tickSet = await getTickSet(nfcAddress, RPCProvider, request.data.tickSetId)
-
-  const calculateReponse = await Requester.request<CalculationResponse>(
-    calculateOptions,
-    customError,
-  )
-
-  if (
-    calculateReponse &&
-    primaryAddress &&
-    !(calculateReponse.data.message === 'address and user already exist')
-  ) {
-    if (primaryAddress !== calculateReponse.data.primary_address) {
-      throw new AdapterError({
-        message: 'FastAPI + Macro API error',
-        cause: 'Primary address is different in FAST API and MACRO Score API',
-      })
-    }
+  if (!jobId) {
+    throw new AdapterError({
+      message: 'Calculate Error MACRO API',
+      cause: 'Could not obtain a jobId',
+    })
   }
 
   const resolveOptions: RequestConfig = {
@@ -161,7 +118,7 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       Authorization: `Token ${config.MACRO_API_KEY}`,
     },
     timeout: config.timeout,
-    url: `/resolve/${primaryAddress}/`,
+    url: `/resolve/job/${jobId}/`,
     method: 'GET',
   }
 
@@ -190,8 +147,7 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       )
     }
   }
-  const tick = computeTickWithScore(score, tickSet)
 
-  console.log(`Tick ${tick} fulfilled for primary address ${primaryAddress}!`)
-  return Requester.success(request.data.jobRunID, Requester.withResult(resolve, tick))
+  console.log(`Score of ${score} fulfilled!`)
+  return Requester.success(request.data.jobRunID, Requester.withResult(resolve, score))
 }

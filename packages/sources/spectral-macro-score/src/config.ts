@@ -4,7 +4,7 @@ import { Config } from '@chainlink/types'
 export const NAME = 'SPECTRAL_MACRO_SCORE'
 
 export const DEFAULT_BASE_URL = 'https://macro-api-test.spectral.finance/api'
-export const DEFAULT_ENDPOINT = 'submit'
+export const DEFAULT_ENDPOINT = 'calculate'
 
 export const DEFAULT_TIMEOUT = 120000
 
@@ -15,7 +15,7 @@ export interface SpectralAdapterConfig extends Config {
   FAST_API_KEY: string
   INFURA_URL: string
   INFURA_API_KEY: string
-  NFC_REGISTRY_ADDRESS: string
+  NFC_ADDRESS: string
   timeout: number
 }
 
@@ -28,7 +28,7 @@ export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
   config.FAST_API_KEY = util.getRequiredEnv('FAST_API_KEY')
   config.INFURA_URL = util.getRequiredEnv('INFURA_URL')
   config.INFURA_API_KEY = util.getRequiredEnv('INFURA_API_KEY')
-  config.NFC_REGISTRY_ADDRESS = util.getRequiredEnv('NFC_REGISTRY_ADDRESS')
+  config.NFC_ADDRESS = util.getRequiredEnv('NFC_ADDRESS')
   config.api.headers = {
     'Content-Type': 'application/json',
   }

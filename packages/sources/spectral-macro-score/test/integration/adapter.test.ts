@@ -4,7 +4,7 @@ import { AdapterRequest } from '@chainlink/types'
 import { BigNumber } from 'ethers'
 import nock from 'nock'
 import sinon from 'sinon'
-import { getTickSet } from '../../src/abi/NFC'
+import { getPublicBundle } from '../../src/abi/NFC'
 import { getNFCAddress } from '../../src/abi/NFCRegistry'
 import { makeExecute } from '../../src/adapter'
 import * as config from '../../src/config'
@@ -44,8 +44,7 @@ describe('execute', () => {
         testData: {
           id: jobID,
           data: {
-            tokenIdHash: '0xaccc41bfab1dbadc07fc27501daa97aea20569b94f2fb85d46612f011fe980e2', // Replace this if recording Nock mock
-            tickSetId: BigNumber.from('1'),
+            address: '0x4B11B9A1582E455c2C5368BEe0FF5d2F1dd4d28e', // Replace this if recording Nock mock
           },
         },
       },
@@ -54,8 +53,12 @@ describe('execute', () => {
     const mockContractCall = async () => {
       sinon.mock
       const rpcUrl = `${util.getRequiredEnv('INFURA_URL')}${util.getRequiredEnv('INFURA_API_KEY')}`
-      const nfcAddress = await getNFCAddress(util.getRequiredEnv('NFC_REGISTRY_ADDRESS'), rpcUrl)
-      const tickSet = await getTickSet(nfcAddress, rpcUrl, BigNumber.from('1'))
+      const nfcAddress = await getNFCAddress(util.getRequiredEnv('NFC_ADDRESS'), rpcUrl)
+      const tickSet = await getPublicBundle(
+        nfcAddress,
+        '0x4B11B9A1582E455c2C5368BEe0FF5d2F1dd4d28e',
+        rpcUrl,
+      )
 
       const mockConfig = sinon.mock(config)
 
@@ -68,7 +71,7 @@ describe('execute', () => {
         FAST_API_KEY: util.getRequiredEnv('FAST_API_KEY'),
         INFURA_URL: util.getRequiredEnv('INFURA_URL'),
         INFURA_API_KEY: util.getRequiredEnv('INFURA_API_KEY'),
-        NFC_REGISTRY_ADDRESS: util.getRequiredEnv('NFC_REGISTRY_ADDRESS'),
+        NFC_ADDRESS: util.getRequiredEnv('NFC_ADDRESS'),
         timeout: config.DEFAULT_TIMEOUT,
       }
       mockConfig.expects('makeConfig').once().returns(mockedConfigResult)
@@ -90,7 +93,8 @@ describe('execute', () => {
           )
 
           expect(parseInt(adapterResponse.data?.result)).not.toBeNull()
-          expect(parseInt(adapterResponse.data.result)).toBeGreaterThan(0)
+          expect(parseInt(adapterResponse.data.result)).toBeGreaterThan(349)
+          expect(parseInt(adapterResponse.data.result)).toBeLowerThanThan(851)
         },
         config.DEFAULT_TIMEOUT,
       )
