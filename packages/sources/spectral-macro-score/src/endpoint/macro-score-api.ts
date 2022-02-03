@@ -6,7 +6,7 @@ import { SpectralAdapterConfig } from '../config'
 
 //const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
-export const MacroScoreAPIName = 'submit'
+export const MacroScoreAPIName = 'calculate'
 
 export interface ICustomError {
   Response: string
@@ -78,8 +78,6 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
     request.data.address,
     RPCProvider,
   )
-
-  console.log({ bundle })
 
   if (!(bundle.length > 0)) {
     throw new AdapterError({

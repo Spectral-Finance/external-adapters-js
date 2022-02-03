@@ -5,7 +5,6 @@ import { BigNumber } from 'ethers'
 import nock from 'nock'
 import sinon from 'sinon'
 import { getPublicBundle } from '../../src/abi/NFC'
-import { getNFCAddress } from '../../src/abi/NFCRegistry'
 import { makeExecute } from '../../src/adapter'
 import * as config from '../../src/config'
 import { mockMacroScoreAPIResponseSuccess } from '../mocks/macro-score-api.mock'
@@ -53,7 +52,7 @@ describe('execute', () => {
     const mockContractCall = async () => {
       sinon.mock
       const rpcUrl = `${util.getRequiredEnv('INFURA_URL')}${util.getRequiredEnv('INFURA_API_KEY')}`
-      const nfcAddress = await getNFCAddress(util.getRequiredEnv('NFC_ADDRESS'), rpcUrl)
+      const nfcAddress = util.getRequiredEnv('NFC_ADDRESS')
       const tickSet = await getPublicBundle(
         nfcAddress,
         '0x4B11B9A1582E455c2C5368BEe0FF5d2F1dd4d28e',
@@ -94,7 +93,7 @@ describe('execute', () => {
 
           expect(parseInt(adapterResponse.data?.result)).not.toBeNull()
           expect(parseInt(adapterResponse.data.result)).toBeGreaterThan(349)
-          expect(parseInt(adapterResponse.data.result)).toBeLowerThanThan(851)
+          expect(parseInt(adapterResponse.data.result)).toBeLessThan(851)
         },
         config.DEFAULT_TIMEOUT,
       )
