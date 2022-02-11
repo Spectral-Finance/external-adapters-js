@@ -1,31 +1,30 @@
 # Chainlink External Adapter for Spectral-MACRO-Score
 
-Used to retrieve a tick (bucket in Credit Scores) for a given token ID hash.
+Used to retrieve a MACRO Score for an Ethereum address
 
 ### Environment Variables
 
-| Required? |         Name         |             Description              | Options | Defaults to |
-| :-------: | :------------------: | :----------------------------------: | :-----: | :---------: |
-|    ✅     |  BASE_URL_MACRO_API  |       MACRO Score API base URL       |         |             |
-|    ✅     |  BASE_URL_FAST_API   |      Bundles' Fast API Base URL      |         |             |
-|    ✅     |    MACRO_API_KEY     |         MACRO Score API Key          |         |             |
-|    ✅     |     FAST_API_KEY     |             FAST API Key             |         |             |
-|    ✅     |      INFURA_URL      |     Base URL of Infura ENDPOINT      |         |             |
-|    ✅     |    INFURA_API_KEY    |            INFURA API KEY            |         |             |
-|    ✅     | NFC_REGISTRY_ADDRESS | Address of the NFC registry contract |         |             |
+| Required? |        Name        |             Description              | Options | Defaults to |
+| :-------: | :----------------: | :----------------------------------: | :-----: | :---------: |
+|    ✅     | BASE_URL_MACRO_API |       MACRO Score API base URL       |         |             |
+|    ✅     | BASE_URL_FAST_API  |          Fast API Base URL           |         |             |
+|    ✅     |   MACRO_API_KEY    |         MACRO Score API Key          |         |             |
+|    ✅     |    FAST_API_KEY    |             FAST API Key             |         |             |
+|    ✅     |    PROVIDER_URL    |      Base URL of Web3 Provider       |         |             |
+|    ✅     |  PROVIDER_API_KEY  |           Provider API key           |         |             |
+|    ✅     |    NFC_ADDRESS     | Address of the NFC registry contract |         |             |
 
 ---
 
 ## Spectral-MACRO-Score Endpoint
 
-Default endpoint used to retrieve a tick (bucket in Credit Scores) for a given token ID hash.
+Default endpoint used to retrieve a MACRO score for a given address.
 
 ### Input Params
 
-| Required? |     Name      |                                  Description                                   | Options | Defaults to |
-| :-------: | :-----------: | :----------------------------------------------------------------------------: | :-----: | :---------: |
-|    ✅     | `tokenIdHash` |                The tokenID for the user as a bytes32 hash value                |         |             |
-|    ✅     |  `tickSetId`  | The id of the set of ticks used to compute the MACRO Score as in integer value |         |             |
+| Required? |   Name    |               Description               | Options | Defaults to |
+| :-------: | :-------: | :-------------------------------------: | :-----: | :---------: |
+|    ✅     | `address` | The address we want to get a score from |         |             |
 
 ### Sample Input
 
@@ -33,8 +32,7 @@ Default endpoint used to retrieve a tick (bucket in Credit Scores) for a given t
 {
   "jobRunID": "1",
   "data": {
-    "tokenIdHash": "0x1a8b05acc3013b2d34a747a85d7d878597bdb177c31c6d0a06b9e654817a9582",
-    "tickSetId": "1"
+    "address": "0x4B11B9A1582E455c2C5368BEe0FF5d2F1dd4d28e"
   }
 }
 ```
@@ -45,7 +43,7 @@ Default endpoint used to retrieve a tick (bucket in Credit Scores) for a given t
 {
   "jobRunID": "1",
   "data": {
-    "result": 1 // this will be the resulting MACRO Score tick
+    "result": 514 // this will be the resulting MACRO Score tick
   },
   "statusCode": 200
 }

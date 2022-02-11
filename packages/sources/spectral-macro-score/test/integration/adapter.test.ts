@@ -4,7 +4,7 @@ import { AdapterRequest } from '@chainlink/types'
 import { BigNumber } from 'ethers'
 import nock from 'nock'
 import sinon from 'sinon'
-import { getPublicBundle } from '../../src/abi/NFC'
+import { getPublicBundle } from '../../src/web3/NFC'
 import { makeExecute } from '../../src/adapter'
 import * as config from '../../src/config'
 import { mockMacroScoreAPIResponseSuccess } from '../mocks/macro-score-api.mock'
@@ -44,6 +44,7 @@ describe('execute', () => {
           id: jobID,
           data: {
             address: '0x4B11B9A1582E455c2C5368BEe0FF5d2F1dd4d28e', // Replace this if recording Nock mock
+            endpoint: 'calculate',
           },
         },
       },
@@ -51,7 +52,9 @@ describe('execute', () => {
 
     const mockContractCall = async () => {
       sinon.mock
-      const rpcUrl = `${util.getRequiredEnv('INFURA_URL')}${util.getRequiredEnv('INFURA_API_KEY')}`
+      const rpcUrl = `${util.getRequiredEnv('PROVIDER_URL')}${util.getRequiredEnv(
+        'PROVIDER_API_KEY',
+      )}`
       const nfcAddress = util.getRequiredEnv('NFC_ADDRESS')
       const tickSet = await getPublicBundle(
         nfcAddress,
@@ -68,8 +71,8 @@ describe('execute', () => {
         BASE_URL_FAST_API: util.getRequiredEnv('BASE_URL_FAST_API'),
         MACRO_API_KEY: util.getRequiredEnv('MACRO_API_KEY'),
         FAST_API_KEY: util.getRequiredEnv('FAST_API_KEY'),
-        INFURA_URL: util.getRequiredEnv('INFURA_URL'),
-        INFURA_API_KEY: util.getRequiredEnv('INFURA_API_KEY'),
+        PROVIDER_URL: util.getRequiredEnv('PROVIDER_URL'),
+        PROVIDER_API_KEY: util.getRequiredEnv('PROVIDER_API_KEY'),
         NFC_ADDRESS: util.getRequiredEnv('NFC_ADDRESS'),
         timeout: config.DEFAULT_TIMEOUT,
       }

@@ -13,10 +13,11 @@ export interface SpectralAdapterConfig extends Config {
   BASE_URL_FAST_API: string
   MACRO_API_KEY: string
   FAST_API_KEY: string
-  INFURA_URL: string
-  INFURA_API_KEY: string
+  PROVIDER_URL: string
+  PROVIDER_API_KEY: string
   NFC_ADDRESS: string
   timeout: number
+  CACHE_ENABLED: boolean
 }
 
 export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
@@ -26,11 +27,12 @@ export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
   config.BASE_URL_FAST_API = util.getRequiredEnv('BASE_URL_FAST_API')
   config.MACRO_API_KEY = util.getRequiredEnv('MACRO_API_KEY')
   config.FAST_API_KEY = util.getRequiredEnv('FAST_API_KEY')
-  config.INFURA_URL = util.getRequiredEnv('INFURA_URL')
-  config.INFURA_API_KEY = util.getRequiredEnv('INFURA_API_KEY')
+  config.PROVIDER_URL = util.getRequiredEnv('PROVIDER_URL')
+  config.PROVIDER_API_KEY = util.getRequiredEnv('PROVIDER_API_KEY')
   config.NFC_ADDRESS = util.getRequiredEnv('NFC_ADDRESS')
   config.api.headers = {
     'Content-Type': 'application/json',
   }
+  config.CACHE_ENABLED = false
   return config
 }

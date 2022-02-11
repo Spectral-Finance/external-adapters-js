@@ -1,7 +1,7 @@
 import { Requester, AdapterError } from '@chainlink/ea-bootstrap'
 import { InputParameters, RequestConfig } from '@chainlink/types'
 import { BigNumber } from 'ethers'
-import { getPublicBundle } from '../abi/NFC'
+import { getPublicBundle } from '../web3/NFC'
 import { SpectralAdapterConfig } from '../config'
 
 //const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
@@ -11,8 +11,6 @@ export const MacroScoreAPIName = 'calculate'
 export interface ICustomError {
   Response: string
 }
-
-export const supportedEndpoints = ['spectral-proxy']
 
 const customError = (data: ICustomError) => {
   if (data.Response === 'Error') return true
@@ -36,11 +34,6 @@ export interface IRequestInput {
   }
 }
 
-export interface AddressesResponse {
-  signed_addresses: string[]
-  unsigned_addresses: string[]
-  primary_address: string
-}
 export interface CalculationResponse {
   primary_address: string
   message: string
@@ -51,14 +44,9 @@ export interface ResolveResponse {
 }
 
 export const inputParameters: InputParameters = {
-  tokenIdInt: {
+  address: {
     required: true,
-    description: 'The tokenID for the user as an integer value',
-    type: 'string',
-  },
-  tickSetId: {
-    required: true,
-    description: 'The set of ticks used to compute the MACRO Score as in integer value',
+    description: 'The users address',
     type: 'string',
   },
 }
@@ -71,7 +59,7 @@ export const computeTickWithScore = (score: number, tickSet: BigNumber[]): numbe
 }
 
 export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
-  const RPCProvider = `${config.INFURA_URL}${config.INFURA_API_KEY}`
+  const RPCProvider = `${config.PROVIDER_URL}${config.PROVIDER_API_KEY}`
 
   const bundle: string[] = await getPublicBundle(
     config.NFC_ADDRESS,
