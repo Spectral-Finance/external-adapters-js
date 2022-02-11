@@ -17,7 +17,7 @@ export interface SpectralAdapterConfig extends Config {
   PROVIDER_API_KEY: string
   NFC_ADDRESS: string
   timeout: number
-  CACHE_ENABLED: boolean
+  WARMUP_ENABLED: boolean
 }
 
 export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
@@ -33,6 +33,6 @@ export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
   config.api.headers = {
     'Content-Type': 'application/json',
   }
-  config.CACHE_ENABLED = false
+  config.WARMUP_ENABLED = false
   return config
 }

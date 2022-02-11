@@ -18,7 +18,6 @@ export const execute = async (
     throw validator.error
   }
 
-  console.log('IM HERE')
   Requester.logConfig(config)
 
   request.data.jobRunID = validator.validated.id
