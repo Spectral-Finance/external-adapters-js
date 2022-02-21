@@ -6,7 +6,7 @@ export function mockMacroScoreAPIResponseSuccess() {
   })
     .persist()
     .post('/default/spectral-proxy', {
-      tokenIdHash: 'test',
+      address: '0x4B11B9A1582E455c2C5368BEe0FF5d2F1dd4d28e',
     })
     .reply(
       200,

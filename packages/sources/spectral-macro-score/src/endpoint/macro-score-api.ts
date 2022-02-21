@@ -1,19 +1,16 @@
 import { Requester, AdapterError } from '@chainlink/ea-bootstrap'
 import { InputParameters, RequestConfig } from '@chainlink/types'
 import { BigNumber } from 'ethers'
-import { getTickSet } from '../abi/NFC'
-import { getNFCAddress } from '../abi/NFCRegistry'
+import { getPublicBundle } from '../web3/NFC'
 import { SpectralAdapterConfig } from '../config'
 
 //const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
-export const MacroScoreAPIName = 'submit'
+export const MacroScoreAPIName = 'calculate'
 
 export interface ICustomError {
   Response: string
 }
-
-export const supportedEndpoints = ['spectral-proxy']
 
 const customError = (data: ICustomError) => {
   if (data.Response === 'Error') return true
@@ -32,16 +29,11 @@ const customErrorResolve = (data: IResolveResult) => {
 export interface IRequestInput {
   id: string
   data: {
-    tokenIdHash: string // bytes32Hash
-    tickSetId: string // numeric
+    address: string
     jobRunID: string
   }
 }
 
-export interface AddressesResponse {
-  signed_addresses: string[]
-  primary_address: string
-}
 export interface CalculationResponse {
   primary_address: string
   message: string
@@ -52,14 +44,9 @@ export interface ResolveResponse {
 }
 
 export const inputParameters: InputParameters = {
-  tokenIdInt: {
+  address: {
     required: true,
-    description: 'The tokenID for the user as an integer value',
-    type: 'string',
-  },
-  tickSetId: {
-    required: true,
-    description: 'The set of ticks used to compute the MACRO Score as in integer value',
+    description: 'The users address',
     type: 'string',
   },
 }
@@ -72,28 +59,18 @@ export const computeTickWithScore = (score: number, tickSet: BigNumber[]): numbe
 }
 
 export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
-  const addressOptions: RequestConfig = {
-    baseURL: `${config.BASE_URL_FAST_API}`,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    timeout: config.timeout,
-    url: '/availAddressesEA/',
-    method: 'POST',
-    data: {
-      key: `${config.FAST_API_KEY}`,
-      tokenId: `${request.data.tokenIdHash}`,
-    },
-  }
+  const RPCProvider = `${config.PROVIDER_URL}${config.PROVIDER_API_KEY}`
 
-  const addressResponse = await Requester.request<AddressesResponse>(addressOptions, customError)
-  const addresses = addressResponse.data.signed_addresses
-  const primaryAddress = addressResponse.data.primary_address
+  const bundle: string[] = await getPublicBundle(
+    config.NFC_ADDRESS,
+    request.data.address,
+    RPCProvider,
+  )
 
-  if (!primaryAddress) {
+  if (!(bundle.length > 0)) {
     throw new AdapterError({
-      message: 'FastAPI + Macro API error',
-      cause: 'Primary address does not exist on FAST API',
+      message: 'No bundle found',
+      cause: 'Error when fetching the bundle from the public NFC',
     })
   }
 
@@ -104,37 +81,22 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       Authorization: `Token ${config.MACRO_API_KEY}`,
     },
     timeout: config.timeout,
-    url: '/submit/',
+    url: '/calculate/',
     method: 'POST',
     data: {
-      username: primaryAddress,
-      addresses,
+      addresses: bundle,
     },
   }
+  const resolveJobId = await Requester.request<CalculationResponse>(calculateOptions, customError)
+  const jobId = Requester.getResult(resolveJobId.data as { [key: string]: any }, ['job'])
 
-  const RPCProvider = `${config.INFURA_URL}${config.INFURA_API_KEY}`
-  const nfcAddress = await getNFCAddress(config.NFC_REGISTRY_ADDRESS, RPCProvider)
-  const tickSet = await getTickSet(nfcAddress, RPCProvider, request.data.tickSetId)
-
-  const calculateReponse = await Requester.request<CalculationResponse>(
-    calculateOptions,
-    customError,
-  )
-
-  if (
-    calculateReponse &&
-    primaryAddress &&
-    !(calculateReponse.data.message === 'address and user already exist')
-  ) {
-    if (primaryAddress !== calculateReponse.data.primary_address) {
-      throw new AdapterError({
-        message: 'FastAPI + Macro API error',
-        cause: 'Primary address is different in FAST API and MACRO Score API',
-      })
-    }
+  if (!jobId) {
+    throw new AdapterError({
+      message: 'Calculate Error MACRO API',
+      cause: 'Could not obtain a jobId',
+    })
   }
 
-  console.log('Pending calculation for: ', primaryAddress)
   const resolveOptions: RequestConfig = {
     baseURL: `${config.BASE_URL_MACRO_API}`,
     headers: {
@@ -142,7 +104,7 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       Authorization: `Token ${config.MACRO_API_KEY}`,
     },
     timeout: config.timeout,
-    url: `/resolve/${primaryAddress}/`,
+    url: `/resolve/job/${jobId}/`,
     method: 'GET',
   }
 
@@ -171,8 +133,7 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       )
     }
   }
-  const tick = computeTickWithScore(score, tickSet)
 
-  console.log(`Tick ${tick} fulfilled for primary address ${primaryAddress}!`)
-  return Requester.success(request.data.jobRunID, Requester.withResult(resolve, tick))
+  console.log(`Score of ${score} fulfilled!`)
+  return Requester.success(request.data.jobRunID, Requester.withResult(resolve, score))
 }

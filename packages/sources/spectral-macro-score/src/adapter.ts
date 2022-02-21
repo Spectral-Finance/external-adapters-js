@@ -1,11 +1,11 @@
 import { Requester, Validator, AdapterError } from '@chainlink/ea-bootstrap'
 import { ExecuteFactory, AdapterRequest, AdapterContext, AdapterResponse } from '@chainlink/types'
 import { makeConfig, DEFAULT_ENDPOINT, SpectralAdapterConfig } from './config'
-import { MacroScoreAPI } from './endpoint'
+import { MacroScoreAPI, ExtraDataAPI } from './endpoint'
 
 const inputParams = {
-  tokenIdHash: true,
-  tickSetId: true,
+  address: true,
+  endpoint: true,
 }
 
 export const execute = async (
@@ -24,9 +24,12 @@ export const execute = async (
 
   const endpoint = validator.validated.data.endpoint || DEFAULT_ENDPOINT
 
-  switch (endpoint.toLowerCase()) {
+  switch (endpoint) {
     case MacroScoreAPI.MacroScoreAPIName: {
       return await MacroScoreAPI.execute(request, config)
+    }
+    case ExtraDataAPI.EndpointName: {
+      return await ExtraDataAPI.execute(request)
     }
     default: {
       throw new AdapterError({
