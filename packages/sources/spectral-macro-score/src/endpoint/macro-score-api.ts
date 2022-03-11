@@ -58,8 +58,47 @@ export const computeTickWithScore = (score: number, tickSet: BigNumber[]): numbe
   return tickSet.length // returns the last (greatest) tick
 }
 
+// Aave -> use anyone's address -> Scoracle -> Adapter
+
 export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
   const RPCProvider = `${config.PROVIDER_URL}${config.PROVIDER_API_KEY}`
+
+  // request.data.address
+
+  /*
+  const addressOptions: RequestConfig = {
+    baseURL: `${config.BASE_URL_FAST_API}`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    timeout: config.timeout,
+    url: '/availAddressesEA/',
+    method: 'POST',
+    data: {
+      key: `${config.FAST_API_KEY}`,
+      tokenId: `${request.data.address}`,
+    },
+  }
+
+  const addressResponse = await Requester.request<AddressesResponse>(addressOptions, customError)
+  const unsignedAddresses = addressResponse.data.unsigned_addresses
+  const addresses = addressResponse.data.signed_addresses
+  const primaryAddress = addressResponse.data.primary_address
+
+  if (!primaryAddress) {
+    throw new AdapterError({
+      message: 'FastAPI Error: Primary address does not exist on FAST API',
+      cause: 'Primary address does not exist on FAST API',
+    })
+  }
+
+  if (unsignedAddresses.length > 0) {
+    throw new AdapterError({
+      message: 'FastAPI Error: The bundle contains unsigned addresses',
+      cause: 'The bundle contains unsigned addresses',
+    })
+  }
+  */
 
   const bundle: string[] = await getPublicBundle(
     config.NFC_ADDRESS,
