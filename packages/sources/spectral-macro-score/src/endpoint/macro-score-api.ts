@@ -1,9 +1,14 @@
 import { Requester, AdapterError } from '@chainlink/ea-bootstrap'
 import { InputParameters, RequestConfig } from '@chainlink/types'
 import { BigNumber } from 'ethers'
-import { getPublicBundle } from '../web3/NFC'
+// import { getPublicBundle } from '../web3/NFC'
 import { SpectralAdapterConfig } from '../config'
 
+export interface AddressesResponse {
+  primary_address: string
+  signed_addresses: string[]
+  unsigned_addresses: string[]
+}
 //const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
 export const MacroScoreAPIName = 'calculate'
@@ -61,11 +66,10 @@ export const computeTickWithScore = (score: number, tickSet: BigNumber[]): numbe
 // Aave -> use anyone's address -> Scoracle -> Adapter
 
 export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
-  const RPCProvider = `${config.PROVIDER_URL}${config.PROVIDER_API_KEY}`
+  // const RPCProvider = `${config.PROVIDER_URL}${config.PROVIDER_API_KEY}`
 
   // request.data.address
 
-  /*
   const addressOptions: RequestConfig = {
     baseURL: `${config.BASE_URL_FAST_API}`,
     headers: {
@@ -76,11 +80,13 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
     method: 'POST',
     data: {
       key: `${config.FAST_API_KEY}`,
-      tokenId: `${request.data.address}`,
+      primary_address: `${request.data.address}`,
     },
   }
+  console.log('\n', config.BASE_URL_FAST_API, '\n')
 
   const addressResponse = await Requester.request<AddressesResponse>(addressOptions, customError)
+  console.log('\n', addressResponse, '\n')
   const unsignedAddresses = addressResponse.data.unsigned_addresses
   const addresses = addressResponse.data.signed_addresses
   const primaryAddress = addressResponse.data.primary_address
@@ -98,20 +104,19 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
       cause: 'The bundle contains unsigned addresses',
     })
   }
-  */
 
-  const bundle: string[] = await getPublicBundle(
-    config.NFC_ADDRESS,
-    request.data.address,
-    RPCProvider,
-  )
+  // const bundle: string[] = await getPublicBundle(
+  //   config.NFC_ADDRESS,
+  //   request.data.address,
+  //   RPCProvider,
+  // )
 
-  if (!(bundle.length > 0)) {
-    throw new AdapterError({
-      message: 'No bundle found',
-      cause: 'Error when fetching the bundle from the public NFC',
-    })
-  }
+  // if (!(bundle.length > 0)) {
+  //   throw new AdapterError({
+  //     message: 'No bundle found',
+  //     cause: 'Error when fetching the bundle from the public NFC',
+  //   })
+  // }
 
   const calculateOptions: RequestConfig = {
     baseURL: `${config.BASE_URL_MACRO_API}`,
@@ -123,7 +128,7 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
     url: '/calculate/',
     method: 'POST',
     data: {
-      addresses: bundle,
+      addresses,
     },
   }
   const resolveJobId = await Requester.request<CalculationResponse>(calculateOptions, customError)
