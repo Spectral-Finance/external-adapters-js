@@ -1,5 +1,12 @@
 # @chainlink/spectral-macro-score-adapter
 
+## 1.2.0
+
+### Patch Changes
+
+- Using updated Fast API endpoints
+- Removed reliance on MACRO API
+
 ## 1.1.3
 
 ### Patch Changes
