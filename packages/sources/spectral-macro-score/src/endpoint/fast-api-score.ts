@@ -1,10 +1,7 @@
-import { Requester, AdapterError } from '@chainlink/ea-bootstrap'
-import { InputParameters, RequestConfig } from '@chainlink/types'
-import { BigNumber } from 'ethers'
-import { getPublicBundle } from '../web3/NFC'
+import { AdapterError, Requester } from '@chainlink/ea-bootstrap'
+import { AdapterResponse, InputParameters, RequestConfig } from '@chainlink/types'
+import { utils } from 'ethers'
 import { SpectralAdapterConfig } from '../config'
-
-//const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
 export const MacroScoreAPIName = 'calculate'
 
@@ -36,11 +33,11 @@ export interface IRequestInput {
 
 export interface CalculationResponse {
   primary_address: string
-  message: string
+  job_id: string
 }
 export interface ResolveResponse {
+  job: string
   score: string // numeric,
-  message: string
 }
 
 export const inputParameters: InputParameters = {
@@ -51,64 +48,58 @@ export const inputParameters: InputParameters = {
   },
 }
 
-export const computeTickWithScore = (score: number, tickSet: BigNumber[]): number => {
-  for (const [index, tick] of tickSet.entries()) {
-    if (tick.toNumber() > score) return index + 1
-  }
-  return tickSet.length // returns the last (greatest) tick
-}
+export const execute = async (
+  request: IRequestInput,
+  config: SpectralAdapterConfig,
+): Promise<AdapterResponse> => {
+  const address = request.data.address
 
-export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
-  const RPCProvider = `${config.PROVIDER_URL}${config.PROVIDER_API_KEY}`
-
-  const bundle: string[] = await getPublicBundle(
-    config.NFC_ADDRESS,
-    request.data.address,
-    RPCProvider,
-  )
-
-  if (!(bundle.length > 0)) {
+  if (!utils.isAddress(address)) {
     throw new AdapterError({
-      message: 'No bundle found',
-      cause: 'Error when fetching the bundle from the public NFC',
+      message: 'Adapter Error: Invalid address',
+      cause: 'Invalid address',
     })
   }
 
   const calculateOptions: RequestConfig = {
-    baseURL: `${config.BASE_URL_MACRO_API}`,
+    baseURL: `${config.BASE_URL_FAST_API}`,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Token ${config.MACRO_API_KEY}`,
     },
     timeout: config.timeout,
     url: '/calculate/',
     method: 'POST',
     data: {
-      addresses: bundle,
+      key: `${config.FAST_API_KEY}`,
+      primary_address: `${request.data.address}`,
     },
   }
   const resolveJobId = await Requester.request<CalculationResponse>(calculateOptions, customError)
-  const jobId = Requester.getResult(resolveJobId.data as { [key: string]: any }, ['job'])
+  const jobId = Requester.getResult(resolveJobId.data as { [key: string]: any }, ['job_id'])
 
   if (!jobId) {
     throw new AdapterError({
-      message: 'Calculate Error MACRO API',
+      message: 'Calculate Error Fast API',
       cause: 'Could not obtain a jobId',
     })
   }
 
   const resolveOptions: RequestConfig = {
-    baseURL: `${config.BASE_URL_MACRO_API}`,
+    baseURL: `${config.BASE_URL_FAST_API}`,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Token ${config.MACRO_API_KEY}`,
     },
     timeout: config.timeout,
-    url: `/resolve/job/${jobId}/`,
-    method: 'GET',
+    url: `/resolve/job/`,
+    method: 'POST',
+    data: {
+      primaryAddress: address,
+      job_id: jobId,
+      key: `${config.FAST_API_KEY}`,
+    },
   }
 
-  let resolve = await Requester.request<ResolveResponse>(
+  const resolve = await Requester.request<ResolveResponse>(
     resolveOptions,
     customErrorResolve,
     25,
@@ -121,15 +112,15 @@ export const execute = async (request: IRequestInput, config: SpectralAdapterCon
     const message = Requester.getResult(resolve.data as { [key: string]: any }, ['message'])
 
     if (message === 'Failed') {
-      console.log(`Calculation failed at the macro-api level`)
+      console.log(`Calculation failed at the fast-api level`)
       return Requester.success(
         request.data.jobRunID,
-        Requester.withResult(resolve, `Calculation failed at the macro-api level`),
+        Requester.withResult(resolve, `Calculation failed at the fast-api level`),
       )
     } else {
       return Requester.success(
         request.data.jobRunID,
-        Requester.withResult(resolve, `Calculation failed at the macro-api level with no message`),
+        Requester.withResult(resolve, `Calculation failed at the fast-api level with no message`),
       )
     }
   }

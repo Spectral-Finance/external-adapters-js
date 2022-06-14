@@ -4,16 +4,11 @@ Used to retrieve a MACRO Score for an Ethereum address
 
 ### Environment Variables
 
-| Required? |        Name        |             Description              | Options | Defaults to |
-| :-------: | :----------------: | :----------------------------------: | :-----: | :---------: |
-|    ✅     | BASE_URL_MACRO_API |       MACRO Score API base URL       |         |             |
-|    ✅     | BASE_URL_FAST_API  |          Fast API Base URL           |         |             |
-|    ✅     |   MACRO_API_KEY    |         MACRO Score API Key          |         |             |
-|    ✅     |    FAST_API_KEY    |             FAST API Key             |         |             |
-|    ✅     |    PROVIDER_URL    |      Base URL of Web3 Provider       |         |             |
-|    ✅     |  PROVIDER_API_KEY  |           Provider API key           |         |             |
-|    ✅     |    NFC_ADDRESS     | Address of the NFC registry contract |         |             |
-|    ✅     |   WARMUP_ENABLED   | Warmup feature of chainlink adapter  |         |    false    |
+| Required? |       Name        |             Description             | Options | Defaults to |
+| :-------: | :---------------: | :---------------------------------: | :-----: | :---------: |
+|    ✅     | BASE_URL_FAST_API |          Fast API Base URL          |         |             |
+|    ✅     |   FAST_API_KEY    |            FAST API Key             |         |             |
+|    ✅     |  WARMUP_ENABLED   | Warmup feature of chainlink adapter |         |    false    |
 
 ---
 
