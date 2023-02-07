@@ -3,24 +3,26 @@ import { Config } from '@chainlink/types'
 
 export const NAME = 'SPECTRAL_MACRO_SCORE'
 
-export const DEFAULT_ENDPOINT = 'spectral-proxy'
-export const DEFAULT_BASE_URL = 'https://xzff24vr3m.execute-api.us-east-2.amazonaws.com/default/'
-export const DEFAULT_TIMEOUT = 60000
+export const DEFAULT_BASE_URL = 'https://sc.dev.spectral.finance'
+export const DEFAULT_ENDPOINT = 'calculate'
+
+export const DEFAULT_TIMEOUT = 120000
 
 export interface SpectralAdapterConfig extends Config {
-  rpcUrl: string
-  nfcAddress: string
+  BASE_URL_BLADE_API: string
+  BLADE_API_KEY: string
+  timeout: number
+  WARMUP_ENABLED: boolean
 }
 
 export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
   const config = <SpectralAdapterConfig>Requester.getDefaultConfig(prefix)
-  config.api.baseURL = config.api.baseURL || DEFAULT_BASE_URL
-  config.api.timeout = DEFAULT_TIMEOUT
-  config.rpcUrl = util.getRequiredEnv('RPC_URL')
-  config.nfcAddress = util.getRequiredEnv('NFC_ADDRESS')
+  config.timeout = DEFAULT_TIMEOUT
+  config.BASE_URL_BLADE_API = util.getRequiredEnv('BASE_URL_BLADE_API')
+  config.BLADE_API_KEY = util.getRequiredEnv('BLADE_API_KEY')
   config.api.headers = {
     'Content-Type': 'application/json',
-    'x-api-key': config.apiKey ?? '',
   }
+  config.WARMUP_ENABLED = false
   return config
 }

@@ -1,1 +1,2 @@
-export * as MacroScoreAPI from './macro-score-api'
+export * as MacroScoreAPI from './blade-api-score'
+export * as ExtraDataAPI from './extra-data'
