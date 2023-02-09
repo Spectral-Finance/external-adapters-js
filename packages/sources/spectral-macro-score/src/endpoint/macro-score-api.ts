@@ -1,5 +1,5 @@
 import { AdapterError, Requester } from '@chainlink/ea-bootstrap'
-import { AdapterResponse, InputParameters, RequestConfig } from '@chainlink/types'
+import { AdapterResponse, InputParameterAliases, RequestConfig } from '@chainlink/types'
 import { utils } from 'ethers'
 import { SpectralAdapterConfig } from '../config'
 
@@ -40,6 +40,16 @@ export interface ResolveResponse {
   score: string // numeric,
 }
 
+export interface InputParameterDetails {
+  required: boolean
+  description: string
+  type: string
+}
+
+export type InputParameters = {
+  [name: string]: InputParameterDetails | InputParameterAliases
+}
+
 export const inputParameters: InputParameters = {
   address: {
     required: true,
@@ -62,7 +72,7 @@ export const execute = async (
   }
 
   const calculateOptions: RequestConfig = {
-    baseURL: `${config.BASE_URL_BLADE_API}`,
+    baseURL: `${config.BASE_URL_FAST_API}`,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -70,7 +80,7 @@ export const execute = async (
     url: '/calculate/',
     method: 'POST',
     data: {
-      key: `${config.BLADE_API_KEY}`,
+      key: `${config.FAST_API_KEY}`,
       primary_address: `${request.data.address}`,
     },
   }
@@ -79,13 +89,13 @@ export const execute = async (
 
   if (!jobId) {
     throw new AdapterError({
-      message: 'Calculate Error Blade API',
+      message: 'Calculate Error Fast API',
       cause: 'Could not obtain a jobId',
     })
   }
 
   const resolveOptions: RequestConfig = {
-    baseURL: `${config.BASE_URL_BLADE_API}`,
+    baseURL: `${config.BASE_URL_FAST_API}`,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -95,7 +105,7 @@ export const execute = async (
     data: {
       primaryAddress: address,
       job_id: jobId,
-      key: `${config.BLADE_API_KEY}`,
+      key: `${config.FAST_API_KEY}`,
     },
   }
 
@@ -112,15 +122,15 @@ export const execute = async (
     const message = Requester.getResult(resolve.data as { [key: string]: any }, ['message'])
 
     if (message === 'Failed') {
-      console.log(`Calculation failed at the blade-api level`)
+      console.log(`Calculation failed at the fast-api level`)
       return Requester.success(
         request.data.jobRunID,
-        Requester.withResult(resolve, `Calculation failed at the blade-api level`),
+        Requester.withResult(resolve, `Calculation failed at the fast-api level`),
       )
     } else {
       return Requester.success(
         request.data.jobRunID,
-        Requester.withResult(resolve, `Calculation failed at the blade-api level with no message`),
+        Requester.withResult(resolve, `Calculation failed at the fast-api level with no message`),
       )
     }
   }
