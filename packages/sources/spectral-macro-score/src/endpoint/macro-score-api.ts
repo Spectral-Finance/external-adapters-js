@@ -1,10 +1,9 @@
-import { Requester } from '@chainlink/ea-bootstrap'
-import { RequestConfig } from '@chainlink/types'
-import { BigNumber } from 'ethers'
-import { getTickSet } from '../abi/NFC'
+import { AdapterError, Requester } from '@chainlink/ea-bootstrap'
+import { AdapterResponse, InputParameterAliases, RequestConfig } from '@chainlink/types'
+import { utils } from 'ethers'
 import { SpectralAdapterConfig } from '../config'
 
-export const MacroScoreAPIName = 'spectral-proxy'
+export const MacroScoreAPIName = 'calculate'
 
 export interface ICustomError {
   Response: string
@@ -15,49 +14,127 @@ const customError = (data: ICustomError) => {
   return false
 }
 
+export interface IResolveResult {
+  message: string
+}
+
+const customErrorResolve = (data: IResolveResult) => {
+  if (data.message === 'calculating') return true
+  return false
+}
+
 export interface IRequestInput {
-  id: string // numeric
+  id: string
   data: {
-    tokenIdInt: string // numeric
-    tickSetId: string // numeric
-    jobRunID: string // numeric
+    address: string
+    jobRunID: string
   }
 }
 
-export interface ScoreResponse {
-  address: string
-  score_aave: string // numeric
-  score_comp: string // numeric
-  score: string // numeric
-  updated_at: string // ISO UTC string
-  is_updating_aave: boolean
-  is_updating_comp: boolean
-  result: number
+export interface CalculationResponse {
+  primary_address: string
+  job_id: string
+}
+export interface ResolveResponse {
+  job: string
+  score: string // numeric,
 }
 
-export const computeTickWithScore = (score: number, tickSet: BigNumber[]): number => {
-  for (const [index, tick] of tickSet.entries()) {
-    if (tick.toNumber() > score) return index + 1
+export interface InputParameterDetails {
+  required: boolean
+  description: string
+  type: string
+}
+
+export type InputParameters = {
+  [name: string]: InputParameterDetails | InputParameterAliases
+}
+
+export const inputParameters: InputParameters = {
+  address: {
+    required: true,
+    description: 'The users address',
+    type: 'string',
+  },
+}
+
+export const execute = async (
+  request: IRequestInput,
+  config: SpectralAdapterConfig,
+): Promise<AdapterResponse> => {
+  const address = request.data.address
+
+  if (!utils.isAddress(address)) {
+    throw new AdapterError({
+      message: 'Adapter Error: Invalid address',
+      cause: 'Invalid address',
+    })
   }
-  return tickSet.length // returns the last (greatest) tick
-}
 
-export const execute = async (request: IRequestInput, config: SpectralAdapterConfig) => {
-  const options: RequestConfig = {
-    ...config.api,
-    url: '/spectral-proxy',
+  const calculateOptions: RequestConfig = {
+    baseURL: `${config.BASE_URL_FAST_API}`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    timeout: config.timeout,
+    url: '/calculate/',
     method: 'POST',
     data: {
-      tokenInt: `${request.data.tokenIdInt}`,
+      key: `${config.FAST_API_KEY}`,
+      primary_address: `${request.data.address}`,
     },
   }
-  const tickSet = await getTickSet(config.nfcAddress, config.rpcUrl, request.data.tickSetId)
-  const response = await Requester.request<ScoreResponse[]>(options, customError)
-  const score = Requester.validateResultNumber(response.data[0], ['score'])
-  const tick = computeTickWithScore(score, tickSet)
-  return Requester.success(
-    request.data.jobRunID,
-    Requester.withResult(response, tick),
-    config.verbose,
+  const resolveJobId = await Requester.request<CalculationResponse>(calculateOptions, customError)
+  const jobId = Requester.getResult(resolveJobId.data as { [key: string]: any }, ['job_id'])
+
+  if (!jobId) {
+    throw new AdapterError({
+      message: 'Calculate Error Fast API',
+      cause: 'Could not obtain a jobId',
+    })
+  }
+
+  const resolveOptions: RequestConfig = {
+    baseURL: `${config.BASE_URL_FAST_API}`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    timeout: config.timeout,
+    url: `/resolve/job/`,
+    method: 'POST',
+    data: {
+      primaryAddress: address,
+      job_id: jobId,
+      key: `${config.FAST_API_KEY}`,
+    },
+  }
+
+  const resolve = await Requester.request<ResolveResponse>(
+    resolveOptions,
+    customErrorResolve,
+    25,
+    4000,
   )
+
+  const score = Requester.validateResultNumber(resolve.data, ['score'])
+
+  if (!score) {
+    const message = Requester.getResult(resolve.data as { [key: string]: any }, ['message'])
+
+    if (message === 'Failed') {
+      console.log(`Calculation failed at the fast-api level`)
+      return Requester.success(
+        request.data.jobRunID,
+        Requester.withResult(resolve, `Calculation failed at the fast-api level`),
+      )
+    } else {
+      return Requester.success(
+        request.data.jobRunID,
+        Requester.withResult(resolve, `Calculation failed at the fast-api level with no message`),
+      )
+    }
+  }
+
+  console.log(`Score of ${score} fulfilled!`)
+  return Requester.success(request.data.jobRunID, Requester.withResult(resolve, score))
 }
