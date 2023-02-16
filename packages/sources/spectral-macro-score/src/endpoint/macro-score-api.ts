@@ -8,7 +8,6 @@ import {
 } from '@chainlink/ea-bootstrap'
 import { InputParameters } from '@chainlink/ea-bootstrap'
 import { BigNumber } from 'ethers'
-import { getTickSet } from '../abi/NFC'
 import { SpectralAdapterConfig } from '../config'
 
 export const MacroScoreAPIName = 'spectral-proxy'
@@ -75,7 +74,6 @@ export const execute = async (
   const validator = new Validator(request, inputParameters)
 
   const tokenIdInt = validator.validated.data.tokenIdInt
-  const tickSetId = validator.validated.data.tickSetId
 
   const options: AxiosRequestConfig = {
     ...config.api,
@@ -85,13 +83,11 @@ export const execute = async (
       tokenInt: `${tokenIdInt}`,
     },
   }
-  const tickSet = await getTickSet(config.nfcAddress, config.rpcUrl, tickSetId, config.chainId)
   const response = await Requester.request<ScoreResponse[]>(options, customError)
   const score = Requester.validateResultNumber(response.data[0], ['score'])
-  const tick = computeTickWithScore(score, tickSet)
   return Requester.success(
     request.data.jobRunID?.toString(),
-    Requester.withResult(response, tick),
+    Requester.withResult(response, score),
     config.verbose,
   )
 }
