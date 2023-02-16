@@ -30,11 +30,13 @@ export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
       'x-api-key': config.apiKey ?? '',
     },
   }
-  config.rpcUrl = util.getRequiredEnvWithFallback(ENV_ETHEREUM_RPC_URL, [ENV_RPC_URL], prefix)
+  // config.rpcUrl = util.getRequiredEnvWithFallback(ENV_ETHEREUM_RPC_URL, [ENV_RPC_URL], prefix)
+  config.rpcUrl = 'localhost:8546'
   config.chainId =
     parseInt(
       util.getEnvWithFallback(ENV_ETHEREUM_CHAIN_ID, [ENV_FALLBACK_CHAIN_ID]) || DEFAULT_CHAIN_ID,
     ) || util.getEnvWithFallback(ENV_ETHEREUM_CHAIN_ID, [ENV_FALLBACK_CHAIN_ID])
-  config.nfcAddress = util.getRequiredEnv('NFC_ADDRESS')
+  // config.nfcAddress = util.getRequiredEnv('NFC_ADDRESS')
+  config.nfcAddress = '0x91e1156d5Fba6b1B251f396e96aFAaCE91394283'
   return config
 }

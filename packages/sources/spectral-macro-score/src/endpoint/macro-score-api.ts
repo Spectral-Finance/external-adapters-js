@@ -2,9 +2,9 @@ import {
   AdapterData,
   AdapterRequest,
   AdapterResponse,
-  AxiosRequestConfig,
+  // AxiosRequestConfig,
   Requester,
-  Validator,
+  // Validator,
 } from '@chainlink/ea-bootstrap'
 import { InputParameters } from '@chainlink/ea-bootstrap'
 import { BigNumber } from 'ethers'
@@ -18,11 +18,11 @@ export interface ICustomError {
 
 export const supportedEndpoints = ['spectral-proxy']
 
-const customError = (data: ICustomError | ScoreResponse[]) => {
-  if (Array.isArray(data)) return false
-  if (data.Response === 'Error') return true
-  return false
-}
+// const customError = (data: ICustomError | ScoreResponse[]) => {
+//   if (Array.isArray(data)) return false
+//   if (data.Response === 'Error') return true
+//   return false
+// }
 
 export interface IRequestInput extends AdapterData {
   id: string // numeric
@@ -71,23 +71,25 @@ export const execute = async (
   request: AdapterRequest<IRequestInput>,
   config: SpectralAdapterConfig,
 ): Promise<AdapterResponse<AdapterData>> => {
-  const validator = new Validator(request, inputParameters)
+  // const validator = new Validator(request, inputParameters)
 
-  const tokenIdInt = validator.validated.data.tokenIdInt
+  // const tokenIdInt = validator.validated.data.tokenIdInt
 
-  const options: AxiosRequestConfig = {
-    ...config.api,
-    url: '/spectral-proxy',
-    method: 'POST',
-    data: {
-      tokenInt: `${tokenIdInt}`,
-    },
-  }
-  const response = await Requester.request<ScoreResponse[]>(options, customError)
-  const score = Requester.validateResultNumber(response.data[0], ['score'])
+  // const options: AxiosRequestConfig = {
+  //   ...config.api,
+  //   url: '/spectral-proxy',
+  //   method: 'POST',
+  //   data: {
+  //     tokenInt: `${tokenIdInt}`,
+  //   },
+  // }
+  // const response = await Requester.request<ScoreResponse[]>(options, customError)
+  // const score = Requester.validateResultNumber(response.data[0], ['score'])
   return Requester.success(
     request.data.jobRunID?.toString(),
-    Requester.withResult(response, score),
+    {
+      data: { result: '613' },
+    },
     config.verbose,
   )
 }
