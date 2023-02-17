@@ -51,6 +51,7 @@ import {
 } from '@chainlink/ea-bootstrap'
 import { makeConfig, DEFAULT_ENDPOINT, SpectralAdapterConfig } from './config'
 import { MacroScoreAPI } from './endpoint'
+import { ExtraDataAPI } from './endpoint'
 
 // const inputParams = {
 //   address: true,
@@ -83,13 +84,13 @@ export const execute: ExecuteWithConfig<
 
   const endpoint = validator.validated.data.endpoint || DEFAULT_ENDPOINT
 
-  switch (endpoint.toLowerCase()) {
+  switch (endpoint) {
     case MacroScoreAPI.MacroScoreAPIName: {
       return await MacroScoreAPI.execute(request, config)
     }
-    // case ExtraDataAPI.EndpointName: {
-    //   return await ExtraDataAPI.execute(request)
-    // }
+    case ExtraDataAPI.EndpointName: {
+      return await ExtraDataAPI.execute(request, config)
+    }
     default: {
       throw new AdapterError({
         jobRunID: request.data.jobRunID,

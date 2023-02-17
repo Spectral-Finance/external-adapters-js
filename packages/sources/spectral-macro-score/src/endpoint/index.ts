@@ -3,4 +3,4 @@
 // export type TInputParameters = MacroScoreInputParameters
 
 export * as MacroScoreAPI from './macro-score-api'
-// export * as ExtraDataAPI from './extra-data'
+export * as ExtraDataAPI from './extra-data'
