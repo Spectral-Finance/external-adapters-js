@@ -40,7 +40,7 @@
 //   config.nfcAddress = '0x91e1156d5Fba6b1B251f396e96aFAaCE91394283'
 //   return config
 // }
-import { Requester, util } from '@chainlink/ea-bootstrap'
+import { Requester } from '@chainlink/ea-bootstrap'
 import { Config } from '@chainlink/ea-bootstrap'
 
 export const NAME = 'SPECTRAL_MACRO_SCORE'
@@ -60,8 +60,8 @@ export interface SpectralAdapterConfig extends Config {
 export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
   const config = <SpectralAdapterConfig>Requester.getDefaultConfig(prefix)
   config.timeout = DEFAULT_TIMEOUT
-  config.BASE_URL_FAST_API = util.getRequiredEnv('BASE_URL_FAST_API')
-  config.FAST_API_KEY = util.getRequiredEnv('FAST_API_KEY')
+  // config.BASE_URL_FAST_API = util.getRequiredEnv('BASE_URL_FAST_API')
+  // config.FAST_API_KEY = util.getRequiredEnv('FAST_API_KEY')
   config.api = {}
   config.api.headers = {
     'Content-Type': 'application/json',
