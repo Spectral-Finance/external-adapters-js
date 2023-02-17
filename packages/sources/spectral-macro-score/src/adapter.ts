@@ -52,17 +52,17 @@ import {
 import { makeConfig, DEFAULT_ENDPOINT, SpectralAdapterConfig } from './config'
 import { MacroScoreAPI } from './endpoint'
 
-const inputParams = {
-  address: true,
-  endpoint: true,
-}
+// const inputParams = {
+//   address: true,
+//   endpoint: true,
+// }
 
 export const execute = async (
   request: AdapterRequest,
   _: AdapterContext,
   config: SpectralAdapterConfig,
 ): Promise<AdapterResponse> => {
-  const validator = new Validator(request, inputParams)
+  const validator = new Validator(request, MacroScoreAPI.inputParameters)
   if (validator.error) {
     throw validator.error
   }
