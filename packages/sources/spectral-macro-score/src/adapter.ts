@@ -42,7 +42,7 @@
 // ) => {
 //   return async (request, context) => execute(request, context, config || makeConfig())
 // }
-import { Requester, Validator, AdapterError } from '@chainlink/ea-bootstrap'
+import { Requester, Validator, AdapterError, ExecuteWithConfig } from '@chainlink/ea-bootstrap'
 import {
   ExecuteFactory,
   AdapterRequest,
@@ -57,8 +57,18 @@ import { MacroScoreAPI } from './endpoint'
 //   endpoint: true,
 // }
 
-export const execute = async (
-  request: AdapterRequest,
+//STARY
+// export const execute = async (
+//   request: AdapterRequest,
+//   _: AdapterContext,
+//   config: SpectralAdapterConfig,
+// ): Promise<AdapterResponse> => {
+
+export const execute: ExecuteWithConfig<
+  SpectralAdapterConfig,
+  MacroScoreAPI.IRequestInput
+> = async (
+  request: AdapterRequest<MacroScoreAPI.IRequestInput>,
   _: AdapterContext,
   config: SpectralAdapterConfig,
 ): Promise<AdapterResponse> => {
@@ -73,7 +83,7 @@ export const execute = async (
 
   const endpoint = validator.validated.data.endpoint || DEFAULT_ENDPOINT
 
-  switch (endpoint) {
+  switch (endpoint.toLowerCase()) {
     case MacroScoreAPI.MacroScoreAPIName: {
       return await MacroScoreAPI.execute(request, config)
     }
@@ -90,7 +100,9 @@ export const execute = async (
   }
 }
 
-export const makeExecute: ExecuteFactory<SpectralAdapterConfig> = (config) => {
+export const makeExecute: ExecuteFactory<SpectralAdapterConfig, MacroScoreAPI.IRequestInput> = (
+  config,
+) => {
   return async (request, context) => execute(request, context, config || makeConfig())
 }
 // export const makeExecute: ExecuteFactory<SpectralAdapterConfig, MacroScoreAPI.IRequestInput> = (
