@@ -226,48 +226,51 @@ export const execute = async (
   //   },
   // }
 
-  let i = 2
-  const getWalletOptions: AxiosRequestConfig = {
-    baseURL: 'https://api.spectral.finance',
+  const calculateScoreOptions: AxiosRequestConfig = {
+    baseURL: config.BASE_URL,
     headers: {
-      authorization: '',
+      authorization: 'Bearer ' + config.API_KEY,
+    },
+    timeout: config.timeout,
+    url: '/api/v1/addresses/' + wallet_address + '/calculate_score',
+    method: 'POST',
+  }
+
+  const customErrorResolveCalculating = (data: IResolveResult) => {
+    if (data.status === 'calculating') return true
+    return false
+  }
+  const resolveCalculating = await Requester.request<BladeGetWalletResponse>(
+    calculateScoreOptions,
+    customErrorResolveCalculating,
+    2,
+    1000,
+  )
+  Requester.success(
+    request.data.jobRunID?.toString(),
+    Requester.withResult(resolveCalculating, 'Score from blade'),
+    true,
+  )
+
+  const getWalletOptions: AxiosRequestConfig = {
+    baseURL: config.BASE_URL,
+    headers: {
+      authorization: 'Bearer ' + config.API_KEY,
     },
     timeout: config.timeout,
     url: '/api/v1/addresses/' + wallet_address,
     method: 'GET',
-    // data: {
-    //   primaryAddress: address,
-    //   job_id: jobId,
-    //   key: `${config.FAST_API_KEY}`,
-    // },
   }
-
-  while (i < 4) {
-    const getWalletOptions: AxiosRequestConfig = {
-      baseURL: 'https://api.spectral.finance',
-      headers: {
-        authorization: '',
-      },
-      timeout: config.timeout,
-      url: '/api/v1/addresses/' + wallet_address,
-      method: 'GET',
-      // data: {
-      //   primaryAddress: address,
-      //   job_id: jobId,
-      //   key: `${config.FAST_API_KEY}`,
-      // },
+  const customErrorResolveGetWallet = (data: IResolveResult) => {
+    if (data.status === 'calculating') {
+      return true
     }
-    i++
-  }
-
-  const customErrorResolve = (data: IResolveResult) => {
-    if (data.status === 'calculating') return true
     return false
   }
   const resolve = await Requester.request<BladeGetWalletResponse>(
-    resolveOptions,
-    customErrorResolve,
-    2,
+    getWalletOptions,
+    customErrorResolveGetWallet,
+    8,
     1000,
   )
 
