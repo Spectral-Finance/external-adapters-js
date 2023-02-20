@@ -18,12 +18,6 @@
 
 // export const supportedEndpoints = ['spectral-proxy']
 
-// // const customError = (data: ICustomError | ScoreResponse[]) => {
-// //   if (Array.isArray(data)) return false
-// //   if (data.Response === 'Error') return true
-// //   return false
-// // }
-
 // export interface IRequestInput extends AdapterData {
 //   id: string // numeric
 //   data: {
@@ -93,7 +87,7 @@
 //     config.verbose,
 //   )
 // }
-import { AdapterData, AdapterRequest, Requester } from '@chainlink/ea-bootstrap'
+import { AdapterData, AdapterRequest, AxiosRequestConfig, Requester } from '@chainlink/ea-bootstrap'
 import { AdapterResponse, InputParameters } from '@chainlink/ea-bootstrap'
 import { SpectralAdapterConfig } from '../config'
 
@@ -109,9 +103,9 @@ export interface ICustomError {
 //   return false
 // }
 
-export interface IResolveResult {
-  message: string
-}
+// export interface IResolveResult {
+//   message: string
+// }
 
 // const customErrorResolve = (data: IResolveResult) => {
 //   if (data.message === 'calculating') return true
@@ -125,6 +119,42 @@ export interface CalculationResponse {
 export interface ResolveResponse {
   job: string
   score: string // numeric,
+}
+
+export interface IResolveResult {
+  score: string
+  score_ingredients: {
+    credit_mix: number
+    defi_actions: number
+    health_and_risk: number
+    liquidation: number
+    market: number
+    time: number
+    wallet: number
+  }
+  status: string
+  score_timestamp: string
+  probability_of_liquidation: string
+  risk_level: string
+  wallet_address: string
+}
+
+export interface BladeGetWalletResponse {
+  score: string
+  score_ingredients: {
+    credit_mix: number
+    defi_actions: number
+    health_and_risk: number
+    liquidation: number
+    market: number
+    time: number
+    wallet: number
+  }
+  status: string
+  score_timestamp: string
+  probability_of_liquidation: string
+  risk_level: string
+  wallet_address: string
 }
 
 export interface IRequestInput extends AdapterData {
@@ -148,6 +178,7 @@ export const execute = async (
   request: AdapterRequest<IRequestInput>,
   config: SpectralAdapterConfig,
 ): Promise<AdapterResponse<AdapterData>> => {
+  const wallet_address = request.data.address
   // const address = request.data.address?.toString() || ""
 
   // if (!utils.isAddress(address)) {
@@ -195,12 +226,50 @@ export const execute = async (
   //   },
   // }
 
-  // const resolve = await Requester.request<ResolveResponse>(
-  //   resolveOptions,
-  //   customErrorResolve,
-  //   25,
-  //   4000,
-  // )
+  let i = 2
+  const getWalletOptions: AxiosRequestConfig = {
+    baseURL: 'https://api.spectral.finance',
+    headers: {
+      authorization: '',
+    },
+    timeout: config.timeout,
+    url: '/api/v1/addresses/' + wallet_address,
+    method: 'GET',
+    // data: {
+    //   primaryAddress: address,
+    //   job_id: jobId,
+    //   key: `${config.FAST_API_KEY}`,
+    // },
+  }
+
+  while (i < 4) {
+    const getWalletOptions: AxiosRequestConfig = {
+      baseURL: 'https://api.spectral.finance',
+      headers: {
+        authorization: '',
+      },
+      timeout: config.timeout,
+      url: '/api/v1/addresses/' + wallet_address,
+      method: 'GET',
+      // data: {
+      //   primaryAddress: address,
+      //   job_id: jobId,
+      //   key: `${config.FAST_API_KEY}`,
+      // },
+    }
+    i++
+  }
+
+  const customErrorResolve = (data: IResolveResult) => {
+    if (data.status === 'calculating') return true
+    return false
+  }
+  const resolve = await Requester.request<BladeGetWalletResponse>(
+    resolveOptions,
+    customErrorResolve,
+    2,
+    1000,
+  )
 
   // const score = Requester.validateResultNumber(resolve.data, ['score'])
 
@@ -224,10 +293,8 @@ export const execute = async (
   console.log(`Score of dupa fulfilled!`)
   return Requester.success(
     request.data.jobRunID?.toString(),
-    {
-      data: { result: '616' },
-    },
-    config.verbose,
+    Requester.withResult(resolve, 'Score from blade'),
+    true,
   )
   // return Requester.success(request.data.jobRunID?.toString(), Requester.withResult(resolve, score))
 }
