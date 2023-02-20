@@ -227,9 +227,9 @@ export const execute = async (
   // }
 
   const calculateScoreOptions: AxiosRequestConfig = {
-    baseURL: config.BASE_URL,
+    baseURL: config.BLADE_BASE_URL,
     headers: {
-      authorization: 'Bearer ' + config.API_KEY,
+      authorization: 'Bearer ' + config.BLADE_API_KEY,
     },
     timeout: config.timeout,
     url: '/api/v1/addresses/' + wallet_address + '/calculate_score',
@@ -253,9 +253,9 @@ export const execute = async (
   )
 
   const getWalletOptions: AxiosRequestConfig = {
-    baseURL: config.BASE_URL,
+    baseURL: config.BLADE_BASE_URL,
     headers: {
-      authorization: 'Bearer ' + config.API_KEY,
+      authorization: 'Bearer ' + config.BLADE_API_KEY,
     },
     timeout: config.timeout,
     url: '/api/v1/addresses/' + wallet_address,

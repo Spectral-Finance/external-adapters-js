@@ -51,8 +51,8 @@ export const DEFAULT_ENDPOINT = 'calculate'
 export const DEFAULT_TIMEOUT = 120000
 
 export interface SpectralAdapterConfig extends Config {
-  BASE_URL: string
-  API_KEY: string
+  BLADE_BASE_URL: string
+  BLADE_API_KEY: string
   timeout: number
   WARMUP_ENABLED: boolean
 }
@@ -60,8 +60,8 @@ export interface SpectralAdapterConfig extends Config {
 export const makeConfig = (prefix?: string): SpectralAdapterConfig => {
   const config = <SpectralAdapterConfig>Requester.getDefaultConfig(prefix)
   config.timeout = DEFAULT_TIMEOUT
-  config.BASE_URL = util.getRequiredEnv('BASE_URL')
-  config.API_KEY = util.getRequiredEnv('API_KEY')
+  config.BLADE_BASE_URL = util.getRequiredEnv('BLADE_BASE_URL')
+  config.BLADE_API_KEY = util.getRequiredEnv('BLADE_API_KEY')
   config.api = {}
   config.api.headers = {
     'Content-Type': 'application/json',
