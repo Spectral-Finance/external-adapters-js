@@ -237,7 +237,7 @@ export const execute = async (
   }
 
   const customErrorResolveCalculating = (data: IResolveResult) => {
-    if (data.status === 'calculating') return true
+    if (data.status === 'processing') return true
     return false
   }
   const resolveCalculating = await Requester.request<BladeGetWalletResponse>(
