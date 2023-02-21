@@ -262,7 +262,7 @@ export const execute = async (
     method: 'GET',
   }
   const customErrorResolveGetWallet = (data: IResolveResult) => {
-    if (data.status === 'calculating') {
+    if (data.status === 'processing' || data.status === 'scheduled') {
       return true
     }
     return false
@@ -274,7 +274,7 @@ export const execute = async (
     1000,
   )
 
-  // const score = Requester.validateResultNumber(resolve.data, ['score'])
+  const score = Requester.validateResultNumber(resolve.data, ['score'])
 
   // if (!score) {
   //   const message = Requester.getResult(resolve.data as { [key: string]: any }, ['message'])
@@ -293,10 +293,9 @@ export const execute = async (
   //   }
   // }
 
-  console.log(`Score of dupa fulfilled!`)
   return Requester.success(
     request.data.jobRunID?.toString(),
-    Requester.withResult(resolve, 'Score from blade'),
+    Requester.withResult(resolve, score),
     true,
   )
   // return Requester.success(request.data.jobRunID?.toString(), Requester.withResult(resolve, score))
