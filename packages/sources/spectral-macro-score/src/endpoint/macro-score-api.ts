@@ -270,7 +270,7 @@ export const execute = async (
   const resolve = await Requester.request<BladeGetWalletResponse>(
     getWalletOptions,
     customErrorResolveGetWallet,
-    8,
+    35,
     1000,
   )
 
